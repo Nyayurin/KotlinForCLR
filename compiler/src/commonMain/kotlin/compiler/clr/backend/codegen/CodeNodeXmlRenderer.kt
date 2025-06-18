@@ -92,7 +92,7 @@ private class Renderer {
 	private fun PlainNode.Plain.render(padding: Int) = buildString {
 		repeat(padding) { append("    ") }
 		append("<PlainNode.Plain>")
-		append(text)
+		append(text.replace("<", "&lt;").replace(">", "&gt;"))
 		append("</PlainNode.Plain>")
 	}
 

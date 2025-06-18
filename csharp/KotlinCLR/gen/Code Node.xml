@@ -20,7 +20,7 @@
             </CodeNode.SingleLine>
             <PaddingNode.Block>
                 <CodeNode.SingleLine>
-                    <PlainNode.Plain>global::System.Collections.Generic.IReadOnlyList</PlainNode.Plain>
+                    <PlainNode.Plain>global::System.Collections.Generic.IReadOnlyList&lt;global::System.String&gt;</PlainNode.Plain>
                     <PlainNode.Plain> </PlainNode.Plain>
                     <PlainNode.Plain>items</PlainNode.Plain>
                     <PlainNode.Plain> = </PlainNode.Plain>
@@ -29,12 +29,13 @@
                         <PlainNode.Plain>.</PlainNode.Plain>
                         <PlainNode.Plain>listOf</PlainNode.Plain>
                         <PlainNode.Plain>(</PlainNode.Plain>
-                        <PlainNode.MultiLine>
-                            <PlainNode.Plain>/*</PlainNode.Plain>
-                            <PlainNode.Plain>Unsupported expression: IrVarargImpl</PlainNode.Plain>
-                            <PlainNode.Plain>at IrExpression.visit</PlainNode.Plain>
-                            <PlainNode.Plain>*/</PlainNode.Plain>
-                        </PlainNode.MultiLine>
+                        <CodeNode.CodeList>
+                            <PlainNode.Plain>"apple"</PlainNode.Plain>
+                            <PlainNode.Plain>, </PlainNode.Plain>
+                            <PlainNode.Plain>"banana"</PlainNode.Plain>
+                            <PlainNode.Plain>, </PlainNode.Plain>
+                            <PlainNode.Plain>"kiwifruit"</PlainNode.Plain>
+                        </CodeNode.CodeList>
                         <PlainNode.Plain>)</PlainNode.Plain>
                     </CodeNode.CodeList>
                     <PlainNode.Plain>;</PlainNode.Plain>

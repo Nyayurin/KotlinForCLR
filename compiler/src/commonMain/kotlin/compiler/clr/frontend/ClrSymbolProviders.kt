@@ -24,7 +24,6 @@ import org.jetbrains.kotlin.fir.*
 import org.jetbrains.kotlin.fir.analysis.checkers.hasAnnotationOrInsideAnnotatedClass
 import org.jetbrains.kotlin.fir.builder.buildPackageDirective
 import org.jetbrains.kotlin.fir.declarations.FirDeclarationOrigin
-import org.jetbrains.kotlin.fir.declarations.FirTypeParameter
 import org.jetbrains.kotlin.fir.declarations.builder.*
 import org.jetbrains.kotlin.fir.declarations.impl.FirDeclarationStatusImpl
 import org.jetbrains.kotlin.fir.declarations.impl.FirResolvedDeclarationStatusImpl

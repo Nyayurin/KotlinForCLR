@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 
 /**
  * CLR平台的IR类型映射器
@@ -50,53 +51,67 @@ class IrTypeMapper(val context: ClrBackendContext) {
 	}
 
 
-	fun mapKotlinToCLRType(type: IrType, fqName: FqName): String {
-		return when (fqName.asString()) {
-			"kotlin.Annotation" -> "global::System.Attribute"
-			"kotlin.Any" -> "global::System.Object"
-			"kotlin.Array" -> when (val typeArgument = (type as IrSimpleType).arguments.single()) {
-				is IrStarProjection -> "/* TODO Array StarProjection: $typeArgument */"
-				is IrTypeProjection -> mapType(typeArgument.type) + "[]"
-			}
-			"kotlin.ByteArray" -> "global::System.SByte[]"
-			"kotlin.CharArray" -> "global::System.Char[]"
-			"kotlin.ShortArray" -> "global::System.Int16[]"
-			"kotlin.IntArray" -> "global::System.Int32[]"
-			"kotlin.LongArray" -> "global::System.Int64[]"
-			"kotlin.FloatArray" -> "global::System.Single[]"
-			"kotlin.DoubleArray" -> "global::System.Double[]"
-			"kotlin.BooleanArray" -> "global::System.Boolean[]"
-			"kotlin.Boolean" -> "global::System.Boolean"
-			"kotlin.Char" -> "global::System.Char"
-			"kotlin.CharSequence" -> "global::System.Collections.Generic.IEnumerable<global::System.Char>"
-			"kotlin.Comparable" -> "global::System.IComparable"
-			"kotlin.Enum" -> "global::System.Enum"
-//			"kotlin.Nothing" -> "global::System.Void" // System.Void 不可用
-			"kotlin.Number" -> "global::System.Numerics.INumber"
-			"kotlin.Byte" -> "global::System.SByte"
-			"kotlin.Short" -> "global::System.Int16"
-			"kotlin.Int" -> "global::System.Int32"
-			"kotlin.Long" -> "global::System.Int64"
-			"kotlin.Float" -> "global::System.Single"
-			"kotlin.Double" -> "global::System.Double"
-			"kotlin.String" -> "global::System.String"
-			"kotlin.Throwable" -> "global::System.Exception"
+	@OptIn(UnsafeDuringIrConstructionAPI::class)
+	fun mapKotlinToCLRType(type: IrType, fqName: FqName) = when (fqName.asString()) {
+		"kotlin.Annotation" -> "global::System.Attribute"
+		"kotlin.Any" -> "global::System.Object"
+		"kotlin.Array" -> when (val typeArgument = (type as IrSimpleType).arguments.single()) {
+			is IrStarProjection -> "dynamic"
+			is IrTypeProjection -> mapType(typeArgument.type) + "[]"
+		}
 
-			"kotlin.collections.Iterable" -> "global::System.Collections.Generic.IEnumerable"
-			"kotlin.collections.MutableIterable" -> "/* TODO: MutableIterable */"
-			"kotlin.collections.Collection" -> "global::System.Collections.Generic.IReadOnlyCollection"
-			"kotlin.collections.MutableCollection" -> "global::System.Collections.Generic.ICollection"
-			"kotlin.collections.List" -> "global::System.Collections.Generic.IReadOnlyList"
-			"kotlin.collections.MutableList" -> "global::System.Collections.Generic.IList"
-			"kotlin.collections.Set" -> "global::System.Collections.Generic.IReadOnlySet"
-			"kotlin.collections.MutableSet" -> "global::System.Collections.Generic.ISet"
-			"kotlin.collections.Map" -> "global::System.Collections.Generic.IReadOnlyDictionary"
-			"kotlin.collections.MutableMap" -> "global::System.Collections.Generic.IDictionary"
-			"kotlin.collections.Iterator" -> "global::System.Collections.Generic.IEnumerator"
-			"kotlin.collections.MutableIterator" -> "/* TODO: MutableIterator */"
-			"kotlin.collections.ListIterator" -> "/* TODO: ListIterator */"
-			"kotlin.collections.MutableListIterator" -> "/* TODO: MutableListIterator */"
-			else -> "global::" + fqName.asString()
+		"kotlin.ByteArray" -> "global::System.SByte[]"
+		"kotlin.CharArray" -> "global::System.Char[]"
+		"kotlin.ShortArray" -> "global::System.Int16[]"
+		"kotlin.IntArray" -> "global::System.Int32[]"
+		"kotlin.LongArray" -> "global::System.Int64[]"
+		"kotlin.FloatArray" -> "global::System.Single[]"
+		"kotlin.DoubleArray" -> "global::System.Double[]"
+		"kotlin.BooleanArray" -> "global::System.Boolean[]"
+		"kotlin.Boolean" -> "global::System.Boolean"
+		"kotlin.Char" -> "global::System.Char"
+		"kotlin.CharSequence" -> "global::System.Collections.Generic.IEnumerable<global::System.Char>"
+
+		"kotlin.Comparable" -> "global::System.IComparable"
+		"kotlin.Enum" -> "global::System.Enum"
+//			"kotlin.Nothing" -> "global::System.Void" // System.Void 不可用
+		"kotlin.Number" -> "global::System.Numerics.INumber"
+		"kotlin.Byte" -> "global::System.SByte"
+		"kotlin.Short" -> "global::System.Int16"
+		"kotlin.Int" -> "global::System.Int32"
+		"kotlin.Long" -> "global::System.Int64"
+		"kotlin.Float" -> "global::System.Single"
+		"kotlin.Double" -> "global::System.Double"
+		"kotlin.String" -> "global::System.String"
+		"kotlin.Throwable" -> "global::System.Exception"
+
+		else -> buildString {
+			append(
+				when (fqName.asString()) {
+					"kotlin.collections.Iterable" -> "global::System.Collections.Generic.IEnumerable"
+					"kotlin.collections.MutableIterable" -> "/* TODO: MutableIterable */"
+					"kotlin.collections.Collection" -> "global::System.Collections.Generic.IReadOnlyCollection"
+					"kotlin.collections.MutableCollection" -> "global::System.Collections.Generic.ICollection"
+					"kotlin.collections.List" -> "global::System.Collections.Generic.IReadOnlyList"
+					"kotlin.collections.MutableList" -> "global::System.Collections.Generic.IList"
+					"kotlin.collections.Set" -> "global::System.Collections.Generic.IReadOnlySet"
+					"kotlin.collections.MutableSet" -> "global::System.Collections.Generic.ISet"
+					"kotlin.collections.Map" -> "global::System.Collections.Generic.IReadOnlyDictionary"
+					"kotlin.collections.MutableMap" -> "global::System.Collections.Generic.IDictionary"
+					"kotlin.collections.Iterator" -> "global::System.Collections.Generic.IEnumerator"
+					"kotlin.collections.MutableIterator" -> "/* TODO: MutableIterator */"
+					"kotlin.collections.ListIterator" -> "/* TODO: ListIterator */"
+					"kotlin.collections.MutableListIterator" -> "/* TODO: MutableListIterator */"
+					else -> "global::" + fqName.asString()
+				}
+			)
+			if (type is IrSimpleType) {
+				type.arguments.ifNotEmpty {
+					append("<")
+					append(joinToString { mapType(it.typeOrFail) })
+					append(">")
+				}
+			}
 		}
 	}
 }

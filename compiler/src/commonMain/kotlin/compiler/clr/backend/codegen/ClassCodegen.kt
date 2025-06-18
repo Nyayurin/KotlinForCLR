@@ -372,7 +372,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 		is IrBlockBody -> statements
 			.filterNot { it is IrDelegatingConstructorCall }
 			.filterNot { it is IrInstanceInitializerCall }
-			.mapNotNull {
+			.map {
 				when (it) {
 					is IrWhen -> it.visit()
 					is IrExpression -> singleLineCode(it.visit(), plainPlain(";"))
@@ -396,7 +396,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 		else -> statements
 			.filterNot { it is IrDelegatingConstructorCall }
 			.filterNot { it is IrInstanceInitializerCall }
-			.mapNotNull {
+			.map {
 				when (it) {
 					is IrWhen -> it.visit()
 					is IrExpression -> singleLineCode(it.visit(), plainPlain(";"))
@@ -421,7 +421,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 		plainPlain("base("),
 		*valueArguments
 			.filterNotNull()
-			.mapNotNull { it.visitUsing() }
+			.map { it.visitUsing() }
 			.join(plainPlain(", "))
 			.toTypedArray(),
 		plainPlain(")"),
@@ -446,7 +446,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 			add(plainPlain("("))
 			valueArguments
 				.filterNotNull()
-				.mapNotNull { it.visitUsing() }
+				.map { it.visitUsing() }
 				.join(plainPlain(", "))
 				.forEach { add(it) }
 			add(plainPlain(")"))
@@ -499,7 +499,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 							add(plainPlain(function.name.asString()))
 							add(plainPlain("("))
 							listOfNotNull(extensionReceiver, *valueArguments.toTypedArray())
-								.mapNotNull { it.visitUsing() }
+								.map { it.visitUsing() }
 								.join(plainPlain(", "))
 								.forEach { add(it) }
 							add(plainPlain(")"))
@@ -550,7 +550,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 							add(plainPlain(function.name.asString()))
 							add(plainPlain("("))
 							listOfNotNull(extensionReceiver, *valueArguments.toTypedArray())
-								.mapNotNull { it.visitUsing() }
+								.map { it.visitUsing() }
 								.join(plainPlain(", "))
 								.forEach { add(it) }
 							add(plainPlain(")"))
@@ -624,7 +624,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 								add(plainPlain(function.name.asString()))
 								add(plainPlain("("))
 								listOfNotNull(extensionReceiver, *valueArguments.toTypedArray())
-									.mapNotNull { it.visitUsing() }
+									.map { it.visitUsing() }
 									.join(plainPlain(", "))
 									.forEach { add(it) }
 								add(plainPlain(")"))
@@ -761,6 +761,18 @@ class ClassCodegen(val context: ClrBackendContext) {
 
 	fun IrBlock.visit() = blockPadding(statements.mapNotNull { it.visit() })
 
+	fun IrVararg.visit() = singleLineListCode(elements.map { it.visit() }.join(plainPlain(", ")))
+
+	fun IrVarargElement.visit(): CodeNode = when (this) {
+		is IrExpression -> visit()
+		else -> multiLinePlain(
+			"/*",
+			"Unsupported vararg element: ${this::class.java.simpleName}",
+			"at IrVarargElement.visit",
+			"*/",
+		)
+	}
+
 	fun IrStatement.visit(): CodeNode? = when (this) {
 		is IrWhen -> visit()
 		is IrExpression -> singleLineCode(visit(), plainPlain(";"))
@@ -784,6 +796,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 		is IrSetValue -> visit()
 		is IrWhen -> visit()
 		is IrBlock -> visit()
+		is IrVararg -> visit()
 		else -> multiLinePlain(
 			"/*",
 			"Unsupported expression: ${this::class.java.simpleName}",
@@ -812,7 +825,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 		)
 	}
 
-	fun IrStringConcatenation.visit(): CodeNode = stringConcatenationCode(arguments.mapNotNull { it.visitUsing() })
+	fun IrStringConcatenation.visit(): CodeNode = stringConcatenationCode(arguments.map { it.visitUsing() })
 
 	fun IrGetValue.visit() = symbol.visit()
 
