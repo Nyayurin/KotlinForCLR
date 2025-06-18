@@ -203,6 +203,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 				typeMapper.mapType(defaultType),
 				"();",
 			),
+			noneCode,
 			*declarations
 				.mapNotNull { it.visit() }
 				.join(noneCode)
@@ -230,7 +231,10 @@ class ClassCodegen(val context: ClrBackendContext) {
 		else -> multiLineCode(
 			buildList {
 				if (returnType.isNothing()) {
-					add(singleLinePlain("[global::System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute]"))
+					add(singleLineCode(plainPlain("[global::System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute]")))
+				}
+				if (extensionReceiverParameter != null) {
+					add(singleLineCode(plainPlain("[global::kotlin.clr.KotlinExtension]")))
 				}
 				add(
 					singleLineCode(
@@ -253,25 +257,15 @@ class ClassCodegen(val context: ClrBackendContext) {
 							}
 							add(plainPlain("$returnType "))
 							add(plainPlain("${name.asString()}("))
+							extensionReceiverParameter?.let {
+								add(plainPlain("${typeMapper.mapType(it.type)} receiver, "))
+							}
 							add(plainPlain(parameters.joinToString(", ") { "${it.first} ${it.second}" }))
 							add(plainPlain(")"))
 						}
 					)
 				)
-				add(
-					body?.visit() ?: blockPadding(
-						singleLinePlain(
-							when {
-								returnType.isUnit() -> ""
-								returnType.isString() -> "return \"\";"
-								returnType.isBoolean() -> "return false;"
-								returnType.isArray() -> "return new $returnType {};"
-								returnType.isNumber() -> "return 0;"
-								else -> "return null;"
-							}
-						)
-					)
-				)
+				add(body?.visit() ?: blockPadding())
 			}
 		)
 	}
@@ -498,7 +492,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 						else -> {
 							add(plainPlain(function.name.asString()))
 							add(plainPlain("("))
-							listOfNotNull(extensionReceiver, *valueArguments.toTypedArray())
+							receiverAndArgs()
 								.map { it.visitUsing() }
 								.join(plainPlain(", "))
 								.forEach { add(it) }
@@ -549,7 +543,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 						else -> {
 							add(plainPlain(function.name.asString()))
 							add(plainPlain("("))
-							listOfNotNull(extensionReceiver, *valueArguments.toTypedArray())
+							receiverAndArgs()
 								.map { it.visitUsing() }
 								.join(plainPlain(", "))
 								.forEach { add(it) }
@@ -623,7 +617,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 							else -> {
 								add(plainPlain(function.name.asString()))
 								add(plainPlain("("))
-								listOfNotNull(extensionReceiver, *valueArguments.toTypedArray())
+								receiverAndArgs()
 									.map { it.visitUsing() }
 									.join(plainPlain(", "))
 									.forEach { add(it) }

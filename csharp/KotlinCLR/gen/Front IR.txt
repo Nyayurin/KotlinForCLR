@@ -1,6 +1,13 @@
 FILE: Main.kt
     public final fun main(): R|kotlin/Unit| {
-        lval items: R|kotlin/collections/List<kotlin/String>| = R|kotlin/collections/listOf|<R|kotlin/String|>(vararg(String(apple), String(banana), String(kiwifruit)))
-        R|kotlin/io/println|(R|<local>/items|)
+        Q|KFC|.R|/vivo|(Int(50))
+    }
+    public final object KFC : R|kotlin/Any| {
+        private constructor(): R|KFC| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final infix fun R|KFC|.vivo(value: R|kotlin/Int|): R|kotlin/Unit| {
     }
 
