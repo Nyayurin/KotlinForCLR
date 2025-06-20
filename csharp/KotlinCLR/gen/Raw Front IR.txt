@@ -1,13 +1,17 @@
 FILE: Main.kt
     public? final? fun main(): R|kotlin/Unit| {
-        KFC#.vivo#(IntegerLiteral(50))
-    }
-    public final? object KFC : R|kotlin/Any| {
-        private constructor(): R|KFC| {
-            super<R|kotlin/Any|>()
+        lval items: <implicit> = listOf#(String(apple), String(banana), String(kiwifruit))
+         {
+            lval <iterator>: <implicit> = items#.iterator#()
+            while(R|<local>/<iterator>|.hasNext#()) {
+                lval item: <implicit> = R|<local>/<iterator>|.next#()
+                 {
+                    println#(item#)
+                }
+
+            }
+
         }
 
-    }
-    public? final? infix fun KFC.vivo(value: Int): R|kotlin/Unit| {
     }
 

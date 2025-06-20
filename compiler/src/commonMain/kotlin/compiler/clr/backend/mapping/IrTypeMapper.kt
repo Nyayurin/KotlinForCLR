@@ -98,7 +98,7 @@ class IrTypeMapper(val context: ClrBackendContext) {
 					"kotlin.collections.MutableSet" -> "global::System.Collections.Generic.ISet"
 					"kotlin.collections.Map" -> "global::System.Collections.Generic.IReadOnlyDictionary"
 					"kotlin.collections.MutableMap" -> "global::System.Collections.Generic.IDictionary"
-					"kotlin.collections.Iterator" -> "global::System.Collections.Generic.IEnumerator"
+					"kotlin.collections.Iterator" -> "global::kotlin.collections.KotlinIterator"
 					"kotlin.collections.MutableIterator" -> "/* TODO: MutableIterator */"
 					"kotlin.collections.ListIterator" -> "/* TODO: ListIterator */"
 					"kotlin.collections.MutableListIterator" -> "/* TODO: MutableListIterator */"

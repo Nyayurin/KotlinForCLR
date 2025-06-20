@@ -32,6 +32,7 @@ private class Visitor {
 		is PaddingNode.If -> visit(padding)
 		is PaddingNode.IfExp -> visit(padding)
 		is PaddingNode.Block -> visit(padding)
+		is PaddingNode.BlockList -> visit(padding)
 	}
 
 	private fun CodeNode.SingleLineList.visit(padding: Int) = buildString {
@@ -142,6 +143,15 @@ private class Visitor {
 
 	private fun PaddingNode.Block.visit(padding: Int) = buildString {
 		repeat(padding) { append("    ") }
+		append("{")
+		appendLine()
+		append(nodes.joinToString("\n") { it.visit(padding + 1) })
+		appendLine()
+		repeat(padding) { append("    ") }
+		append("}")
+	}
+
+	private fun PaddingNode.BlockList.visit(padding: Int) = buildString {
 		append("{")
 		appendLine()
 		append(nodes.joinToString("\n") { it.visit(padding + 1) })

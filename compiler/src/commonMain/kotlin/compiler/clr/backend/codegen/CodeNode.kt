@@ -47,6 +47,10 @@ sealed class PaddingNode : CodeNode() {
 	data class Block(
 		val nodes: List<CodeNode>,
 	) : PaddingNode()
+
+	data class BlockList(
+		val nodes: List<CodeNode>,
+	) : PaddingNode()
 }
 
 val noneCode = CodeNode.None
@@ -87,6 +91,9 @@ fun ifExpPadding(
 
 fun blockPadding(vararg nodes: CodeNode) = blockPadding(nodes.toList())
 fun blockPadding(nodes: List<CodeNode>) = PaddingNode.Block(nodes)
+
+fun blockListPadding(vararg nodes: CodeNode) = blockListPadding(nodes.toList())
+fun blockListPadding(nodes: List<CodeNode>) = PaddingNode.BlockList(nodes)
 
 fun CodeNode.appendSingleLine(vararg appends: CodeNode) = when (this) {
 	is CodeNode.SingleLine -> singleLineCode(*nodes.toTypedArray(), *appends)

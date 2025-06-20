@@ -1,13 +1,17 @@
 FILE: Main.kt
     public final fun main(): R|kotlin/Unit| {
-        Q|KFC|.R|/vivo|(Int(50))
-    }
-    public final object KFC : R|kotlin/Any| {
-        private constructor(): R|KFC| {
-            super<R|kotlin/Any|>()
+        lval items: R|kotlin/collections/List<kotlin/String>| = R|kotlin/collections/listOf|<R|kotlin/String|>(vararg(String(apple), String(banana), String(kiwifruit)))
+         {
+            lval <iterator>: R|kotlin/collections/Iterator<kotlin/String>| = R|<local>/items|.R|SubstitutionOverride<kotlin/collections/List.iterator: R|kotlin/collections/Iterator<kotlin/String>|>|()
+            while(R|<local>/<iterator>|.R|kotlin/collections/Iterator.hasNext|()) {
+                lval item: R|kotlin/String| = R|<local>/<iterator>|.R|SubstitutionOverride<kotlin/collections/Iterator.next: R|kotlin/String|>|()
+                 {
+                    R|kotlin/io/println|(R|<local>/item|)
+                }
+
+            }
+
         }
 
-    }
-    public final infix fun R|KFC|.vivo(value: R|kotlin/Int|): R|kotlin/Unit| {
     }
 

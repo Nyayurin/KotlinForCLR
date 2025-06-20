@@ -32,6 +32,7 @@ private class Renderer {
 		is PaddingNode.If -> render(padding)
 		is PaddingNode.IfExp -> render(padding)
 		is PaddingNode.Block -> render(padding)
+		is PaddingNode.BlockList -> render(padding)
 	}
 
 	private fun CodeNode.None.render(padding: Int) = buildString {
@@ -188,5 +189,15 @@ private class Renderer {
 
 		repeat(padding) { append("    ") }
 		append("</PaddingNode.Block>")
+	}
+
+	private fun PaddingNode.BlockList.render(padding: Int) = buildString {
+		repeat(padding) { append("    ") }
+		appendLine("<PaddingNode.BlockList>")
+
+		appendLine(nodes.joinToString("\n") { it.render(padding + 1) })
+
+		repeat(padding) { append("    ") }
+		append("</PaddingNode.BlockList>")
 	}
 }

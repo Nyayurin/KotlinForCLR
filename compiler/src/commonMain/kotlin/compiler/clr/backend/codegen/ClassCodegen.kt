@@ -37,6 +37,8 @@ import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.javac.resolve.classId
+import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 
 inline fun <T> List<T>.join(separator: T): List<T> = when {
 	isEmpty() -> this
@@ -112,7 +114,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 			visibility.delegate.visit(),
 			plainPlain("static "),
 			plainPlain("class "),
-			plainPlain(name.asString())
+			plainPlain(name.visit())
 		),
 		blockPadding(
 			declarations
@@ -126,7 +128,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 			visibility.delegate.visit(),
 			modality.visit(),
 			plainPlain("class "),
-			plainPlain(name.asString()),
+			plainPlain(name.visit()),
 			plainPlain(" : "),
 			plainPlain(superTypes.joinToString(", ") { typeMapper.mapType(it) }),
 		),
@@ -143,7 +145,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 				add(visibility.delegate.visit())
 				add(modality.visit())
 				add(plainPlain("interface "))
-				add(plainPlain(name.asString()))
+				add(plainPlain(name.visit()))
 				if (superTypes.isNotEmpty()) {
 					add(plainPlain(" : "))
 					add(plainPlain(superTypes.joinToString(", ") { typeMapper.mapType(it) }))
@@ -162,7 +164,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 			visibility.delegate.visit(),
 			modality.visit(),
 			plainPlain("enum "),
-			plainPlain(name.asString()),
+			plainPlain(name.visit()),
 		),
 		blockPadding(
 			declarations
@@ -176,7 +178,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 			visibility.delegate.visit(),
 			modality.visit(),
 			plainPlain("class "),
-			plainPlain(name.asString()),
+			plainPlain(name.visit()),
 			plainPlain(" : global::System.Attribute"),
 		),
 		blockPadding(
@@ -191,7 +193,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 			visibility.delegate.visit(),
 			modality.visit(),
 			plainPlain("class "),
-			plainPlain(name.asString()),
+			plainPlain(name.visit()),
 			plainPlain(" : "),
 			plainPlain(superTypes.joinToString(", ") { typeMapper.mapType(it) }),
 		),
@@ -217,6 +219,8 @@ class ClassCodegen(val context: ClrBackendContext) {
 			is IrClass -> visit()
 			is IrFunction -> visit()
 			is IrProperty -> visit()
+			is IrVariable -> visit()
+			is IrTypeParameter -> visit()
 			else -> multiLinePlain(
 				"/*",
 				"Unsupported declaration: ${this::class.java.simpleName}",
@@ -248,7 +252,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 							val returnType = typeMapper.mapReturnType(returnType)
 
 							val parameters = valueParameters.map {
-								typeMapper.mapType(it.type) to it.name.asString()
+								typeMapper.mapType(it.type) to it.name.visit()
 							}
 
 							add(visibility.delegate.visit())
@@ -256,7 +260,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 								add(plainPlain("static "))
 							}
 							add(plainPlain("$returnType "))
-							add(plainPlain("${name.asString()}("))
+							add(plainPlain("${name.visit()}("))
 							extensionReceiverParameter?.let {
 								add(plainPlain("${typeMapper.mapType(it.type)} receiver, "))
 							}
@@ -273,10 +277,10 @@ class ClassCodegen(val context: ClrBackendContext) {
 	fun IrConstructor.visit() = multiLineCode(
 		singleLineCode(
 			buildList {
-				val className = (parent as? IrClass)?.name?.asString()!!
+				val className = (parent as? IrClass)?.name?.visit()!!
 
 				val parameters = valueParameters.map {
-					typeMapper.mapType(it.type) to it.name.asString()
+					typeMapper.mapType(it.type) to it.name.visit()
 				}
 
 				add(visibility.delegate.visit())
@@ -302,7 +306,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 						.map { it.first to it.second!! }
 						.map { (property, initializer) ->
 							singleLineCode(
-								plainPlain("this.${property.name.asString()} = "),
+								plainPlain("this.${property.name.visit()} = "),
 								initializer.visitUsing(),
 								plainPlain(";")
 							)
@@ -345,7 +349,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 				add(plainPlain(typeMapper.mapType(type)))
 				add(plainPlain(" "))
 
-				add(plainPlain(name.asString()))
+				add(plainPlain(name.visit()))
 			}
 		),
 		blockPadding(
@@ -433,10 +437,10 @@ class ClassCodegen(val context: ClrBackendContext) {
 
 			add(plainPlain("new global::"))
 			if (!packageFragment.packageFqName.isRoot) {
-				add(plainPlain(packageFragment.packageFqName.asString()))
+				add(plainPlain(packageFragment.packageFqName.visit()))
 				add(plainPlain("."))
 			}
-			add(plainPlain(constructedClass.name.asString()))
+			add(plainPlain(constructedClass.name.visit()))
 			add(plainPlain("("))
 			valueArguments
 				.filterNotNull()
@@ -463,7 +467,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 					add(plainPlain("."))
 					when (function.name.isSpecial) {
 						true -> {
-							val name = function.name.asString()
+							val name = function.name.visit()
 
 							when {
 								name.startsWith("<set-") -> {
@@ -490,9 +494,9 @@ class ClassCodegen(val context: ClrBackendContext) {
 						}
 
 						else -> {
-							add(plainPlain(function.name.asString()))
+							add(plainPlain(function.name.visit()))
 							add(plainPlain("("))
-							receiverAndArgs()
+							listOfNotNull(extensionReceiver, *valueArguments.toTypedArray())
 								.map { it.visitUsing() }
 								.join(plainPlain(", "))
 								.forEach { add(it) }
@@ -515,7 +519,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 					add(plainPlain("."))
 					when (function.name.isSpecial) {
 						true -> {
-							val name = function.name.asString()
+							val name = function.name.visit()
 							when {
 								name.startsWith("<set-") -> {
 									add(plainPlain(name.substring("<set-".length, name.length - 1)))
@@ -541,9 +545,9 @@ class ClassCodegen(val context: ClrBackendContext) {
 						}
 
 						else -> {
-							add(plainPlain(function.name.asString()))
+							add(plainPlain(function.name.visit()))
 							add(plainPlain("("))
-							receiverAndArgs()
+							listOfNotNull(extensionReceiver, *valueArguments.toTypedArray())
 								.map { it.visitUsing() }
 								.join(plainPlain(", "))
 								.forEach { add(it) }
@@ -554,7 +558,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 			)
 
 			else -> when {
-				function.isOperator -> when (function.name.asString()) {
+				function.isOperator -> when (function.name.visit()) {
 					"plus" -> singleLineListCode(
 						plainPlain("("),
 						arguments[0]!!.visitUsing(),
@@ -575,9 +579,49 @@ class ClassCodegen(val context: ClrBackendContext) {
 						plainPlain(")"),
 					)
 
+					"iterator" -> singleLineListCode(
+						plainPlain("new global::kotlin.collections.KotlinIterator<"),
+						dispatchReceiver!!.type.let {
+							it as IrSimpleType
+							plainPlain(typeMapper.mapType(it.arguments.single().typeOrFail))
+						},
+						plainPlain(">("),
+						singleLineListCode(
+							dispatchReceiver!!.visit(),
+							plainPlain(".GetEnumerator()")
+						),
+						plainPlain(")")
+					)
+
+					"hasNext" -> singleLineListCode(
+						dispatchReceiver!!.visit(),
+						plainPlain("."),
+						plainPlain(function.name.visit()),
+						plainPlain("("),
+						*valueArguments
+							.filterNotNull()
+							.map { it.visitUsing() }
+							.join(plainPlain(", "))
+							.toTypedArray(),
+						plainPlain(")")
+					)
+
+					"next" -> singleLineListCode(
+						dispatchReceiver!!.visit(),
+						plainPlain("."),
+						plainPlain(function.name.visit()),
+						plainPlain("("),
+						*valueArguments
+							.filterNotNull()
+							.map { it.visitUsing() }
+							.join(plainPlain(", "))
+							.toTypedArray(),
+						plainPlain(")")
+					)
+
 					else -> multiLinePlain(
 						"/*",
-						"Unsupported name: ${function.name.asString()}",
+						"Unsupported name: ${function.name.visit()}",
 						"at IrCall.visitClassParent: $this",
 						"is operator",
 						"*/",
@@ -590,7 +634,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 						add(plainPlain("."))
 						when (function.name.isSpecial) {
 							true -> {
-								val name = function.name.asString()
+								val name = function.name.visit()
 								when {
 									name.startsWith("<set-") -> {
 										add(plainPlain(name.substring("<set-".length, name.length - 1)))
@@ -615,9 +659,9 @@ class ClassCodegen(val context: ClrBackendContext) {
 							}
 
 							else -> {
-								add(plainPlain(function.name.asString()))
+								add(plainPlain(function.name.visit()))
 								add(plainPlain("("))
-								receiverAndArgs()
+								listOfNotNull(extensionReceiver, *valueArguments.toTypedArray())
 									.map { it.visitUsing() }
 									.join(plainPlain(", "))
 									.forEach { add(it) }
@@ -634,8 +678,8 @@ class ClassCodegen(val context: ClrBackendContext) {
 		val function = symbol.owner
 		val parent = function.parent as IrExternalPackageFragment
 
-		return when (parent.packageFqName.asString()) {
-			"kotlin.internal.ir" -> when (function.name.asString()) {
+		return when (parent.packageFqName.visit()) {
+			"kotlin.internal.ir" -> when (function.name.visit()) {
 				"greater" -> singleLineListCode(
 					plainPlain("("),
 					valueArguments[0]!!.visitUsing(),
@@ -688,7 +732,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 		buildList {
 			add(plainPlain(typeMapper.mapType(type)))
 			add(plainPlain(" "))
-			add(plainPlain(name.asString()))
+			add(plainPlain(name.visit()))
 			initializer?.let {
 				add(plainPlain(" = "))
 				add(it.visitUsing())
@@ -727,7 +771,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 			content = when (val content = car.result) {
 				is IrBlock -> content.visitUsing().let { node ->
 					node as PaddingNode.Block
-					blockPadding(
+					blockListPadding(
 						*node.nodes.dropLast(1).toTypedArray(),
 						node.nodes.last().pushSingleLine(plainPlain("return ")),
 					)
@@ -739,7 +783,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 				1 -> when (val content = cdr.single().result) {
 					is IrBlock -> content.visitUsing().let { node ->
 						node as PaddingNode.Block
-						blockPadding(
+						blockListPadding(
 							*node.nodes.dropLast(1).toTypedArray(),
 							node.nodes.last().pushSingleLine(plainPlain("return ")),
 						)
@@ -753,9 +797,14 @@ class ClassCodegen(val context: ClrBackendContext) {
 		)
 	}
 
-	fun IrBlock.visit() = blockPadding(statements.mapNotNull { it.visit() })
+	fun IrBlock.visit() = blockListPadding(statements.mapNotNull { it.visit() })
 
 	fun IrVararg.visit() = singleLineListCode(elements.map { it.visit() }.join(plainPlain(", ")))
+
+	fun IrWhileLoop.visit(): CodeNode = multiLineListCode(
+		singleLineListCode(plainPlain("while ("), condition.visit(), plainPlain(")")),
+		multiLineCode(body?.visit() ?: blockListPadding())
+	)
 
 	fun IrVarargElement.visit(): CodeNode = when (this) {
 		is IrExpression -> visit()
@@ -791,6 +840,7 @@ class ClassCodegen(val context: ClrBackendContext) {
 		is IrWhen -> visit()
 		is IrBlock -> visit()
 		is IrVararg -> visit()
+		is IrWhileLoop -> visit()
 		else -> multiLinePlain(
 			"/*",
 			"Unsupported expression: ${this::class.java.simpleName}",
@@ -826,24 +876,8 @@ class ClassCodegen(val context: ClrBackendContext) {
 	fun IrSymbol.visit() = when (this) {
 		is IrVariableSymbol,
 		is IrValueSymbol,
-			-> {
-			val name = owner.name
-			when (name.isSpecial) {
-				true -> when (name.asString()) {
-					"<this>" -> plainPlain("this")
-					else -> multiLinePlain(
-						"/*",
-						"Unsupported special name: ${name.asString()}",
-						"at IrSymbol.visit: $this",
-						"is IrValueSymbol",
-						"is special",
-						"*/",
-					)
-				}
+			-> plainPlain(owner.name.visit())
 
-				else -> plainPlain(owner.name.asString())
-			}
-		}
 
 		else -> multiLinePlain(
 			"/*",
@@ -852,6 +886,25 @@ class ClassCodegen(val context: ClrBackendContext) {
 			"*/",
 		)
 	}
+
+	fun Name.visit() = when (isSpecial) {
+		true -> when (asString()) {
+			"<this>" -> "this"
+			"<iterator>" -> "iterator"
+			else -> """
+				/*
+				Unsupported special name: ${asString()}
+				at IrSymbol.visit: $this
+				is IrValueSymbol
+				is special
+				*/
+			""".trimIndent()
+		}
+
+		else -> asString()
+	}
+
+	fun FqName.visit() = asString()
 
 	fun Visibility.visit() = when (this) {
 		is Visibilities.Private -> plainPlain("private ")

@@ -1,7 +1,6 @@
 fun main() {
-	KFC vivo 50
+	val items = listOf("apple", "banana", "kiwifruit")
+	for (item in items) {
+		println(item)
+	}
 }
-
-object KFC
-
-infix fun KFC.vivo(value: Int) {}

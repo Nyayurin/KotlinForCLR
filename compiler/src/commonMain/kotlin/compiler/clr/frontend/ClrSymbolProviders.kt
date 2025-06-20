@@ -1288,6 +1288,7 @@ class ClrBuiltinsSymbolProvider(
 					Visibilities.Public,
 					Modality.OPEN
 				).apply {
+					isOperator = true
 //					isOverride = true
 				}.resolved(
 					Visibilities.Public,
@@ -1298,14 +1299,9 @@ class ClrBuiltinsSymbolProvider(
 					coneType = ConeClassLikeTypeImpl(
 						StandardClassIds.Iterator.toLookupTag(),
 						arrayOf(
-							ConeKotlinTypeProjectionOut(
-								ConeTypeVariableType(
-									false,
-									ConeTypeVariableTypeConstructor(
-										"E",
-										ConeTypeParameterLookupTag(typeParameter)
-									)
-								)
+							ConeTypeParameterTypeImpl(
+								typeParameter.toLookupTag(),
+								false
 							)
 						),
 						false
@@ -1397,12 +1393,9 @@ class ClrBuiltinsSymbolProvider(
 					EffectiveVisibility.Public
 				)
 				returnTypeRef = buildResolvedTypeRef {
-					coneType = ConeTypeVariableType(
-						false,
-						ConeTypeVariableTypeConstructor(
-							"T",
-							ConeTypeParameterLookupTag(typeParameter)
-						)
+					coneType = ConeTypeParameterTypeImpl(
+						typeParameter.toLookupTag(),
+						false
 					)
 				}
 				dispatchReceiverType = ConeClassLikeTypeImpl(
