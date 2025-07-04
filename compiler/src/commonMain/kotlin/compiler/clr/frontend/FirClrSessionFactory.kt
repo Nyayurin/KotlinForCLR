@@ -244,7 +244,7 @@ object FirClrSessionFactory :
 					ClrActualizingBuiltinSymbolProvider(builtinsSymbolProvider, refinedSourceSymbolProviders)
 				}
 			} else {
-				ClrClasspathBuiltinSymbolProvider(
+				ClrBuiltinsSymbolProvider(
 					session,
 					session.moduleData,
 					kotlinScopeProvider,

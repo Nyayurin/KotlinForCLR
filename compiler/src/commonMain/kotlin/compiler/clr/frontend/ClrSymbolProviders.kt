@@ -35,13 +35,15 @@ import org.jetbrains.kotlin.fir.resolve.providers.FirSymbolProvider
 import org.jetbrains.kotlin.fir.resolve.providers.FirSymbolProviderInternals
 import org.jetbrains.kotlin.fir.scopes.FirKotlinScopeProvider
 import org.jetbrains.kotlin.fir.scopes.kotlinScopeProvider
-import org.jetbrains.kotlin.fir.symbols.ConeTypeParameterLookupTag
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.*
-import org.jetbrains.kotlin.fir.types.*
+import org.jetbrains.kotlin.fir.types.ConeTypeProjection
+import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.builder.buildResolvedTypeRef
+import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.impl.ConeClassLikeTypeImpl
 import org.jetbrains.kotlin.fir.types.impl.ConeTypeParameterTypeImpl
+import org.jetbrains.kotlin.fir.types.toLookupTag
 import org.jetbrains.kotlin.javac.resolve.classId
 import org.jetbrains.kotlin.name.*
 import org.jetbrains.kotlin.types.Variance
@@ -1612,52 +1614,6 @@ class ClrBuiltinsSymbolProvider(
 		name: Name,
 	) {
 	}
-}
-
-/**
- * CLR类路径内置符号提供器
- */
-class ClrClasspathBuiltinSymbolProvider(
-	session: FirSession,
-	moduleData: FirModuleData,
-	kotlinScopeProvider: FirKotlinScopeProvider,
-	assemblies: Map<String, NodeAssembly>,
-) : FirSymbolProvider(session) {
-	private val delegate = ClrBuiltinsSymbolProvider(
-		session,
-		moduleData,
-		kotlinScopeProvider,
-		assemblies
-	)
-
-	override fun getClassLikeSymbolByClassId(classId: ClassId) =
-		delegate.getClassLikeSymbolByClassId(classId)
-
-	override fun hasPackage(fqName: FqName) =
-		delegate.hasPackage(fqName)
-
-	override val symbolNamesProvider get() = delegate.symbolNamesProvider
-
-	@FirSymbolProviderInternals
-	override fun getTopLevelCallableSymbolsTo(
-		destination: MutableList<FirCallableSymbol<*>>,
-		packageFqName: FqName,
-		name: Name,
-	) = delegate.getTopLevelCallableSymbolsTo(destination, packageFqName, name)
-
-	@FirSymbolProviderInternals
-	override fun getTopLevelFunctionSymbolsTo(
-		destination: MutableList<FirNamedFunctionSymbol>,
-		packageFqName: FqName,
-		name: Name,
-	) = delegate.getTopLevelFunctionSymbolsTo(destination, packageFqName, name)
-
-	@FirSymbolProviderInternals
-	override fun getTopLevelPropertySymbolsTo(
-		destination: MutableList<FirPropertySymbol>,
-		packageFqName: FqName,
-		name: Name,
-	) = delegate.getTopLevelPropertySymbolsTo(destination, packageFqName, name)
 }
 
 /**
